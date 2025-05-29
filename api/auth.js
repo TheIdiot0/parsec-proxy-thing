@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*'); // or specify your frontend domain
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Change to your frontend domain in production
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -19,18 +19,26 @@ export default async function handler(req, res) {
   try {
     console.log('Proxy auth request body:', req.body);
 
+    // Construct headers
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Optionally add Authorization if available
+    if (process.env.PARSEC_API_TOKEN) {
+      headers['Authorization'] = `Bearer ${process.env.PARSEC_API_TOKEN}`;
+    }
+
+    console.log('Sending headers:', headers);
+
     const response = await fetch('https://parsecgaming.com/v1/auth', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(req.body),
     });
 
-    // Read raw text in case response is not valid JSON
     const text = await response.text();
 
-    // Try to parse JSON, fallback to raw text
     let data;
     try {
       data = JSON.parse(text);
